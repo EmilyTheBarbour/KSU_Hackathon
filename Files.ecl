@@ -20,7 +20,7 @@
  ******************************************************************************/
 EXPORT Files := MODULE
     // Change this value to your name (recommend first initial + full last name)
-    SHARED MY_NAME := 'H12';
+    SHARED MY_NAME := 'H2';
     SHARED MY_FILE_SCOPE := IF(MY_NAME != '', '~' + MY_NAME, ERROR(-1, 'You need to set Files.MY_NAME to your name or initials'));
     //--------------------------------------------------------------------------
     // Call this function to create a full path for a file that you will create.

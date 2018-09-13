@@ -48,7 +48,14 @@ EXPORT Files := MODULE
             STRING16        terminal_identifier;
         END;
         EXPORT File := DATASET(PATH, RecordDef, FLAT);
+
+        EXPORT merchant_data_patterns_raw_file_path := MY_NAME + '::' +
+            'merchant_data_patterns.thor';
+
     END;
+    
+    
+
     //--------------------------------------------------------------------------
     // EXPORT Customers := MODULE
     //     EXPORT PATH := '~dataseers::customers';

@@ -1,7 +1,7 @@
 IMPORT KSU_Hackathon;
 IMPORT DataPatterns;
 
-OUTPUTKSU_Hackathon.Files.MerchantData.File, NAMED('MerchantData'));
+OUTPUT(KSU_Hackathon.Files.MerchantData.File, NAMED('MerchantData'));
 
 //below returns a search 
 //merchantname := KSU_Hackathon.Files.MerchantData.File(merchant_name = 'ADIDAS ONLINE STORE ');

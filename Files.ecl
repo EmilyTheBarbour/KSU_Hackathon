@@ -1,112 +1,102 @@
-IMPORT STD;
-
+/******************************************************************************
+ * How to use this module
+ *
+ * Calling code needs to import this module:
+ *
+ *      IMPORT Files;
+ *
+ * Make sure you assign a value to Files.MY_NAME, below.  This value
+ * will become the prefix of all files you will create on the cluster.
+ *
+ * To create a full pathname for a file you will create (as for OUTPUT) given a
+ * STRING path:
+ *
+ *      myFullPath := Files.FullPath(path);
+ *
+ * To access one of the datasets, just reference the 'file' attribute within
+ * the appropriate submodule.  Example:
+ *
+ *      theData := Files.MerchantData.file;
+ ******************************************************************************/
 EXPORT Files := MODULE
-        EXPORT file_scope := '~training-samples';
-        EXPORT project_scope := 'merchant';
-        EXPORT in_files_scope := 'in';
-        EXPORT out_files_scope := 'out';
-
-        /*
-            Location of raw file on the landing zone {Consider one months worth of trips for the initial test}
-        */
-
-        EXPORT merchant_lz_file_path := '/var/lib/HPCCSystems/mydropzone/yellow_tripdata_2015-01.csv';
-
-        /*
-            Raw file layout and dataset after it is imported into Thor
-        */
-
-        EXPORT merchant_raw_file_path := file_scope + '::' + project_scope + '::' + in_files_scope + '::yellow_tripdata.csv';
-
-        EXPORT merchant_raw_layout := RECORD
-            STRING merchant_number;
-            STRING merchant_name;
-            STRING merchant_category;
+    // Change this value to your name (recommend first initial + full last name)
+    SHARED MY_NAME := 'H12';
+    SHARED MY_FILE_SCOPE := IF(MY_NAME != '', '~' + MY_NAME, ERROR(-1, 'You need to set Files.MY_NAME to your name or initials'));
+    //--------------------------------------------------------------------------
+    // Call this function to create a full path for a file that you will create.
+    // The argument is a portion of the path; this function merely adds a
+    // prefix in the correct format and returns the result.
+    EXPORT FullPath(STRING path) := MY_FILE_SCOPE + '::' + TRIM(path, LEFT, RIGHT);
+    //--------------------------------------------------------------------------
+    EXPORT MerchantData := MODULE
+        EXPORT PATH := '~dataseers::merchant_data';
+        EXPORT RecordDef := RECORD
+            DECIMAL18_5     transaction_amount;
+            STRING10        pos_indicator;
+            STRING20        merchant_ref_num;
+            STRING30        merchant_number;
+            STRING50        merchant_name;
+            STRING100       merchant_address;
+            STRING50        merchant_city;
+            STRING2         merchant_state;
+            STRING3         merchant_country_code;
+            STRING35        merchant_country;
+            STRING10        merchant_zip;
+            STRING4         merchant_category_code;
+            STRING225       merchant_category;
+            STRING6         terminal_fiid;
+            STRING16        terminal_identifier;
         END;
-
-        EXPORT mrechant_raw_ds := DATASET(merchant_raw_file_path, merchant_raw_layout, CSV(HEADING(1)));
-
-        /*
-         
-        EXPORT Data Profile report on the Raw File. Use the report output to understand your data 
-        and validate the assumptions you would have made.
-
-        */
-
-        EXPORT merchant_data_patterns_raw_file_path := file_scope + '::' + 
-             project_scope + '::' + out_files_scope +  '::yellow_tripdata_raw_data_patterns.thor';
-
-
-        /*
-            Cleaned file layout and dataset. The cleaned file is created after cleaning the 
-            raw file.
-        */
-    
-        EXPORT merchant_clean_file_path := file_scope + '::' + project_scope + '::' + out_files_scope + '::yellow_tripdata_clean.thor';
-        
-        EXPORT merchant_clean_layout := RECORD
-            UNSIGNED1 merchant_number;
-            STRING merchant_name;
-            STRING merchant_category;
-        END;
-
-        EXPORT merchant_clean_ds := DATASET(merchant_clean_file_path, merchant_clean_layout, THOR);    
-
-        /*
-            The cleaned file is enriched to add important attributes
-        */
-
-        EXPORT merchant_enrich_file_path := file_scope + '::' + project_scope + '::' + out_files_scope +  '::yellow_tripdata_enriched.thor';
-        
-        EXPORT merchant_enrich_layout := RECORD
-            merchant_clean_layout;
-        END;
-
-        EXPORT merchant_enrich_ds := DATASET(merchant_enrich_file_path, merchant_enrich_layout, THOR);    
-   
-        /* 
-            Create a simple attribute file that records the counts of trips daily
-        */
-        EXPORT merchant_analyze_file_path := file_scope + '::' + project_scope + '::' + out_files_scope +  '::yellow_tripdata_analyze.thor';
-        
-        EXPORT merchant_analyze_layout := RECORD
-            Std.Date.Date_t    pickup_date;
-            UNSIGNED4 cnt;        
-        END;
-
-        EXPORT merchant_analyze_ds := DATASET(merchant_analyze_file_path, merchant_analyze_layout, THOR);    
-
-        /*
-            Create a training file to train a GLM for predecting trip counts for a future date
-        */
-
-        EXPORT merchant_train_file_path := file_scope + '::' + project_scope + '::' + out_files_scope +  '::yellow_tripdata_train.thor';
-
-        EXPORT merchant_train_layout := RECORD
-            unsigned2 pickup_year;
-            unsigned2 pickup_month;
-            unsigned2 pickup_day_of_month;
-            unsigned2 pickup_day_of_week;
-            unsigned4 cnt;
-        END;
-
-        EXPORT merchant_train_ds := DATASET(merchant_train_file_path, merchant_train_layout, THOR);    
- 
-        /* 
-            Build the GLM model for predecting traffic
-        */
-        // EXPORT merchant_model_file_path := file_scope + '::merchant::out::yellow_tripdata_2015_model.thor';
-
-        // EXPORT merchant_model_layout := RECORD
-
-        // END;
-
-        // EXPORT merchant_model_ds := DATASET(merchant_model_file_path, merchant_model_layout, THOR);    
-
-        /*
-           Export
-        */ 
-
-        EXPORT merchant_analysis_lz_file_path := '/var/lib/HPCCSystems/mydropzone/yellow_tripdata_analysis.csv';  
-        EXPORT merchant_analyze_csv_file_path := file_scope + '::' + project_scope + '::' + out_files_scope +  '::yellow_tripdata_analyze.csv';
+        EXPORT File := DATASET(PATH, RecordDef, FLAT);
+    END;
+    //--------------------------------------------------------------------------
+    // EXPORT Customers := MODULE
+    //     EXPORT PATH := '~dataseers::customers';
+    //     EXPORT RecordDef := RECORD
+    //         STRING50        first_name;
+    //         STRING50        last_name;
+    //         STRING75        address;
+    //         STRING50        city;
+    //         STRING30        state;
+    //         STRING6         zip;
+    //         STRING20        country;
+    //     END;
+    //     EXPORT File := DATASET(PATH, RecordDef, FLAT);
+    // END;
+    // //--------------------------------------------------------------------------
+    // EXPORT OFACMaster := MODULE
+    //     EXPORT PATH := '~dataseers::ofac_master';
+    //     // Additional information on this data can be found at:
+    //     //      https://www.treasury.gov/resource-center/sanctions/SDN-List/Pages/sdn_data.aspx
+    //     //      https://www.treasury.gov/resource-center/faqs/Sanctions/Pages/faq_compliance.aspx#5
+    //     //      https://www.treasury.gov/resource-center/sanctions/SDN-List/Documents/dat_spec.txt
+    //     EXPORT RecordDef := RECORD
+    //         UNSIGNED4       ent_num;            // unique record identifier/unique listing identifier
+    //         STRING350       sdn_name;           // special designated nationals
+    //         STRING12        sdn_type;           // individual or business
+    //         STRING50        program;            // sanctions program name
+    //         STRING200       title;              // title of an individual
+    //         STRING8         call_sign;          // vessel call sign
+    //         STRING25        vess_type;          // vessel type
+    //         STRING14        tonnage;            // vessel tonnage
+    //         STRING8         grt;                // gross registered tonnage
+    //         STRING40        vess_flag;          // vessel flag
+    //         STRING150       vess_owner;         // vessel owner name
+    //         STRING1000      remarks;            // remarks on SDN
+    //         UNSIGNED4       ent_num_add;
+    //         UNSIGNED4       add_num;
+    //         STRING750       address;            // street address of SDN
+    //         STRING116       city_state_zip;     // city, state/province, zip/postal code pf SDN
+    //         STRING250       country;            // country of address
+    //         STRING200       add_remarks;        // remarks on address
+    //         UNSIGNED4       ent_num_alt;
+    //         UNSIGNED4       alt_num;
+    //         STRING8         alt_type;           // type of alternate identity
+    //         STRING350       alt_name;           // alternate identity name
+    //         STRING200       alt_remarks;        // remarks on alternate identity
+    //         UNSIGNED4       ent_num_sdncmt;
+    //         STRING          remarks_extended;
+    //     END;
+    //     EXPORT File := DATASET(PATH, RecordDef, FLAT);
+    // END;
 END;

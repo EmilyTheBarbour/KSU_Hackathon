@@ -2,8 +2,8 @@ IMPORT Visualizer;
 
 R1 := RECORD
     STRING25 merchant_name;
-    INTEGER4 x;
-    INTEGER4 y;
+    REAL x;
+    REAL y;
 END;
 
 ds := DATASET([ {'', 5, 20},

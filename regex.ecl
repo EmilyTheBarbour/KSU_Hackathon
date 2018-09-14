@@ -39,7 +39,10 @@ END;
 resultTwo := Project(second_edit, normal(LEFT));
 Output(resultTwo, NAMED('editTWO'));
 
-result_sorted := SORT(resultTwo, RECORD, STABLE);
+unsorted_results := resultTwo;
 
-uniqueresult := DEDUP(result_sorted,keep 1);
-Output(uniqueresult, NAMED('Unique'));
+result_sorted := SORT(unsorted_results, RECORD, STABLE):
+		PERSIST('unique_sorted', SINGLE); //result_sorted
+//uniqueresult := DEDUP(result_sorted,keep 1);
+result_noNull := result_sorted(result_sorted.merch_names > '');
+Output(result_noNull, NAMED('unique')); //sortNOTunique Unique

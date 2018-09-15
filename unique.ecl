@@ -24,7 +24,7 @@ first_edit := result;
 //removes single values
 
 first_edit single_replace(first_edit F) := Transform
-	SELF.merch_names := REGEXREPLACE('([A-z *-]{2,50}[A-z]{2,50})(.{0,3}([0-9-]{0,3}[A-z *+.#-/]{0,3}){1,10})', F.merch_names,'');
+	SELF.merch_names := REGEXREPLACE('(^| ).( |$)', F.merch_names,'');
 END;
 resultONE := Project(first_edit, single_replace(LEFT));
 Output(resultONE, NAMED('editONE'));
@@ -41,8 +41,8 @@ Output(resultTwo, NAMED('editTWO'));
 
 unsorted_results := resultTwo;
 
-result_sorted := SORT(unsorted_results, RECORD, STABLE, skew(1)):
+result_sorted := SORT(unsorted_results, RECORD, STABLE):
 		PERSIST('unique_sorted', SINGLE); //result_sorted
-//uniqueresult := DEDUP(result_sorted,keep 1);
-result_noNull := result_sorted(result_sorted.merch_names > '');
-Output(result_noNull, NAMED('unique')); //sortNOTunique Unique
+uniqueresult := DEDUP(result_sorted,keep 1);
+uniqueresult_nonull := uniqueresult(uniqueresult.merch_names > '');
+Output(uniqueresult_nonull, NAMED('unique')); //sortNOTunique Unique

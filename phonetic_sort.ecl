@@ -1,6 +1,10 @@
 IMPORT KSU_Hackathon;
 IMPORT DataPatterns;
 IMPORT STD;
+IMPORT Mast.ML.Docs;
+IMPORT Docs.Tokenize AS Types;
+IMPORT Std.Str AS Str;
+
 
 OUTPUT(KSU_Hackathon.Files.MerchantData.File, NAMED('MerchantData'));
 
@@ -54,6 +58,7 @@ metaphone_output := RECORD
 	String Meta1;
 	String Meta2;
 	String Meta_both;
+
 END;
 
 metaphone_output toPhonetic(meta_input M) := TRANSFORM
@@ -67,5 +72,29 @@ phonetic_index := PROJECT(meta_input, toPhonetic(LEFT));
 
 COUNT(phonetic_index);
 COUNT(phonetic_index(Meta1 <> Meta2)); 
+
 OUTPUT(phonetic_index); 
 OUTPUT(phonetic_index(Meta1 <> Meta2));
+
+  
+metaphone_output Clean(DATASET(metaphone_output) r) := FUNCTION
+	s := r.source;
+	CleanForTokens(STRING s):=FUNCTION
+		sRestrictChars:=' '+REGEXREPLACE('[^- A-Z0-9\']',Str.ToUpperCase(s),' ')+' ';
+		sStripPunctEnds:=REGEXREPLACE('( -)|(- )|( \')|(\' )',sRestrictChars,' ');
+		sRemoveNumberOnly:=REGEXREPLACE(' [-0-9\']+(?=[ ])',sStripPunctEnds,'');
+		sRemoveSingleChars:=REGEXREPLACE(' [B-H,J-Z](?=[ ])',sRemoveNumberOnly,'');
+		sCompressSpaces:=REGEXREPLACE('[ ]+',sRemoveSingleChars,' ');
+		sNormalizePosessives:=REGEXREPLACE('\'S ',sCompressSpaces,' ');
+		sSplitContraction01:=REGEXREPLACE('\'RE ',sNormalizePosessives,' ARE ');
+		sSplitContraction02:=REGEXREPLACE('\'LL ',sSplitContraction01,' WILL ');
+		sSplitContraction03:=REGEXREPLACE(' I\'M ',sSplitContraction02,' I AM ');
+		RETURN sSplitContraction03;
+	END;
+	x := PROJECT(r,TRANSFORM(metaphone_output,SELF.source := CleanForTokens(LEFT.source), SELF := LEFT));
+	RETURN x;
+	
+  END;
+
+
+
